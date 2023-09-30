@@ -1,0 +1,92 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Datos
+X = np.array([2, 1.5])  # Coeficientes verdaderos
+b_true = 3
+n_samples = 500
+np.random.seed(0)
+X_samples = np.random.rand(n_samples, 2) * 5
+noise = np.random.randn(n_samples) * 0.3
+Y = X_samples.dot(X) + b_true + noise
+
+# Modelo lineal
+m = np.random.randn(2)  # Coeficientes iniciales
+b = np.random.randn()
+
+# Configuración del gráfico
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(X_samples[:, 0], X_samples[:, 1], Y, c='b', label='Datos')
+
+# Configuración adicional del gráfico
+ax.set_title("Datos y Modelo - Época 0")
+ax.set_xlabel('X1')
+ax.set_ylabel('X2')
+ax.set_zlabel('Y')
+
+# Cálculo del costo (MSE)
+Y_prediction_actual = X_samples.dot(m) + b
+mse = np.mean((Y_prediction_actual - Y) ** 2)
+
+# Opciones adicionales
+display_step = 50  # Mostrar resultados cada 50 épocas
+N = len(Y)
+loss = []  # Pérdida
+epochs = []  # Épocas
+
+# Proceso de optimización
+epochs_total = 500
+learning_rate = 0.01
+convergence_criteria = 1e-5  # Criterio de convergencia
+
+for step in range(epochs_total):
+    # Gradientes iniciales (Zero gradients)
+    m_gradient = np.zeros_like(m)
+    b_gradient = 0
+    error = 0
+
+    # Calculamos el error y con ello, el gradiente
+    Y_prediction = X_samples.dot(m) + b
+    Diferencia = Y_prediction - Y
+    error = np.mean(Diferencia ** 2)  # MSE
+    m_gradient = (2 / N) * X_samples.T.dot(Diferencia)
+    b_gradient = (2 / N) * np.sum(Diferencia)
+
+    # Actualizamos los valores de acuerdo al gradiente
+    m = m - (m_gradient * learning_rate)
+    b = b - (b_gradient * learning_rate)
+
+    # Guardamos el objetivo por cada época
+    loss.append(np.abs(error))
+    epochs.append(step)
+
+    # Mostramos cada display_step épocas
+    if step % display_step == 0:
+        # Limpiar el gráfico
+        ax.cla()
+        # Graficar el modelo en 3D
+        Y_prediction = X_samples.dot(m) + b
+        ax.scatter(X_samples[:, 0], X_samples[:, 1], Y, c='b', label='Datos')
+        ax.plot_trisurf(X_samples[:, 0], X_samples[:, 1], Y_prediction, cmap='viridis', edgecolor='none')
+        ax.set_title("Datos y Modelo - Época {}".format(step))
+        ax.set_xlabel('X1')
+        ax.set_ylabel('X2')
+        ax.set_zlabel('Y')
+
+    # Convergencia
+    if len(loss) > 1 and np.abs(loss[-1] - loss[-2]) < convergence_criteria:
+        break
+
+# Graficar el costo (MSE)
+plt.figure()
+plt.plot(epochs, loss)
+plt.title("Costo (MSE)")
+plt.xlabel("Época")
+plt.ylabel("MSE")
+plt.show()
+
+# impresion
+print("Costo (MSE):", mse)
+print("Los valores obtenidos son: m =", m, "y b =", b)
+print("Finalizado en", step, "iteraciones")
